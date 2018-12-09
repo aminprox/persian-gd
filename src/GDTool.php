@@ -109,14 +109,14 @@ class GDTool implements GDToolContract {
 	 *
 	 * @var resource
 	 */
-	protected $imageResource;
+	public $imageResource;
 
     /**
 	 * The decorator to decorate strings before print them into image
 	 *
 	 * @var StringDecorator
 	 */
-	protected $decorator;
+	public $decorator;
 
     /**
      * @var bool
@@ -301,6 +301,7 @@ class GDTool implements GDToolContract {
 	 */
 	public function addLine($line)
 	{
+
 		array_push($this->lines, $line);
 
 		return $this;
@@ -329,8 +330,6 @@ class GDTool implements GDToolContract {
     public function setUseLocalNumber($useLocalNumber)
     {
         $this->useLocalNumber = $useLocalNumber;
-	
-	return $this;
     }
 
     /**
@@ -339,11 +338,11 @@ class GDTool implements GDToolContract {
 	public function build()
 	{
 		$this->initDecorator();
-		$this->initImage();
+		//$this->initImage($filename);
 		$this->generateColorAllocates();
 		$this->writeLines();
 
-		return $this->generate();
+		return $this;
 	}
 
     /**
@@ -361,17 +360,15 @@ class GDTool implements GDToolContract {
 	 */
 	protected function initDecorator()
 	{
-		if (!isset($this->decorator) || is_null($this->decorator)) {
-			$this->decorator = new PersianStringDecorator();
-		}
+		$this->decorator = new PersianStringDecorator();
 	}
 
 	/**
 	 * Initialize image canvas
 	 */
-	protected function initImage()
+	protected function initImage($filename)
 	{
-		$this->imageResource = imagecreate($this->width, $this->getHeight());
+		$this->imageResource = imagecreatefrompng($filename);//imagecreate($this->width, $this->getHeight());
 	}
 
 	/**
@@ -438,15 +435,15 @@ class GDTool implements GDToolContract {
 		}
 
 		return [
-			hexdec($red),
-			hexdec($green),
-			hexdec($blue),
+			'red'   => hexdec($red),
+			'green' => hexdec($green),
+			'blue'  => hexdec($blue),
 		];
 	}
 
 	protected function writeLines()
 	{
-        $verticalPos = $this->verticalPosition;
+		$verticalPos = $this->verticalPosition;
 		foreach ($this->lines as $dir => $line) {
 			imagettftext(
 				$this->imageResource,
@@ -456,11 +453,12 @@ class GDTool implements GDToolContract {
 				$verticalPos,
 				$this->fontColorAllocate,
 				$this->font,
-				$this->decorator->decorate($line, $this->useLocalNumber)
+				$this->decorator->decorate($line, $this->useLocalNumber, false)
 			);
 
 			$verticalPos += $this->lineHeight;
 		}
+		$this->lines = array();
 	}
 
 	protected function generate()
@@ -472,9 +470,7 @@ class GDTool implements GDToolContract {
 			return ob_get_clean();
 		}
 
-		imagepng($this->imageResource, $this->fileName);
-
-		return $this->fileName;
+		return $this->imageResource;
 	}
 
 }
